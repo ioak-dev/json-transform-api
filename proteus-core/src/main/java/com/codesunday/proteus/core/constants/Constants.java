@@ -15,36 +15,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  */
 
-package org.ppythagoras.proteus.core.client;
+package com.codesunday.proteus.core.constants;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-import org.ppythagoras.proteus.core.processor.Transformer;
+public class Constants {
 
-/**
- * Client implementation.
- * 
- * @author Arun Kumar Selvaraj
- *
- */
-class ProteusClientImpl {
+	public static final String _AS_SET = "_asSet";
+	public static final String AS_SPACE = " AS ";
+	public static final String DOT = "DOT";
 
-	ProteusClientImpl() {
-		super();
-	}
-
-	static JSONObject transformImpl(JSONObject input, String templateText) {
-
-		JSONObject template = null;
-
-		try {
-
-			template = Transformer.transformImpl(input, new JSONObject(templateText));
-
-		} catch (JSONException e) {
-			e.printStackTrace();
-		}
-
-		return template;
-	}
 }

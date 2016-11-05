@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  */
 
-package org.ppythagoras.proteus.core.client;
+package com.codesunday.proteus.core.client;
 
 import java.util.ArrayList;
 import java.util.List;

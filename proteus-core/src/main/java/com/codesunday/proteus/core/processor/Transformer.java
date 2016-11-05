@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  */
 
-package org.ppythagoras.proteus.core.processor;
+package com.codesunday.proteus.core.processor;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -25,9 +25,10 @@ import java.util.Map;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.ppythagoras.proteus.core.constants.Constants;
-import org.ppythagoras.proteus.core.exception.ProteusException;
-import org.ppythagoras.proteus.core.utils.JSONUtils;
+
+import com.codesunday.proteus.core.constants.Constants;
+import com.codesunday.proteus.core.exception.ProteusException;
+import com.codesunday.proteus.core.utils.JSONUtils;
 
 /**
  * Tranformation logic implementation.

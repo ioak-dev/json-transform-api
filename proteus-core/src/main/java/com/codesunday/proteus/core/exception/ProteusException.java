@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  */
 
-package org.ppythagoras.proteus.core.exception;
+package com.codesunday.proteus.core.exception;
 
 /**
  * Custom Exception from the framework/library.

@@ -1,4 +1,4 @@
-package org.ppythagoras.proteus.core.examples;
+package com.codesunday.proteus.core.examples;
 
 import java.io.File;
 import java.io.IOException;
@@ -8,7 +8,8 @@ import java.util.List;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.ppythagoras.proteus.core.client.ProteusClient;
+
+import com.codesunday.proteus.core.client.ProteusClient;
 
 public class Example {
 
