@@ -4,13 +4,13 @@
 
 
 
-	<groupId>org.ppythagoras.proteus</groupId>
+	<groupId>com.codesunday.proteus</groupId>
 	<artifactId>proteus-core</artifactId>
 	<version>1.0-SNAPSHOT</version>
 	<packaging>jar</packaging>
 	
-<parent>
-		<groupId>org.ppythagoras.proteus</groupId>
+	<parent>
+		<groupId>com.codesunday.proteus</groupId>
 		<artifactId>proteus-parent</artifactId>
 		<version>1.0-SNAPSHOT</version>
 	</parent>
