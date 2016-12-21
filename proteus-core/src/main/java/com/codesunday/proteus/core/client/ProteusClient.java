@@ -23,6 +23,8 @@ import java.util.List;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import com.codesunday.proteus.core.processor.Flattener;
+
 /**
  * Client instance that will act as interface for this library.
  * 
@@ -57,7 +59,7 @@ public class ProteusClient {
 	 * @return
 	 */
 	public JSONObject transform(JSONObject input, String templateText) {
-		return ProteusClientImpl.transformImpl(input, templateText);
+		return clientImpl.transformImpl(input, templateText);
 	}
 
 	/**
@@ -239,6 +241,22 @@ public class ProteusClient {
 		}
 
 		return transform(input, templateText);
+	}
+	
+	public JSONObject flattenAsJson(JSONObject input){
+		return clientImpl.flattenAsJson(input);
+	}
+	
+	public JSONArray flattenAsJson(JSONArray input){
+		return clientImpl.flattenAsJson(input);
+	}
+
+	public JSONArray flattenAsDelimited(JSONObject input, String delimiter, String enclosedBy) {
+		return clientImpl.flattenAsDelimited(input, delimiter, enclosedBy);
+	}
+
+	public JSONArray flattenAsDelimited(JSONArray input, String delimiter, String enclosedBy) {
+		return clientImpl.flattenAsDelimited(input, delimiter, enclosedBy);
 	}
 
 }

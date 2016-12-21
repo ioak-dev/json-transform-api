@@ -17,9 +17,11 @@
 
 package com.codesunday.proteus.core.client;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.codesunday.proteus.core.processor.Flattener;
 import com.codesunday.proteus.core.processor.Transformer;
 
 /**
@@ -34,7 +36,7 @@ class ProteusClientImpl {
 		super();
 	}
 
-	static JSONObject transformImpl(JSONObject input, String templateText) {
+	JSONObject transformImpl(JSONObject input, String templateText) {
 
 		JSONObject template = null;
 
@@ -47,5 +49,21 @@ class ProteusClientImpl {
 		}
 
 		return template;
+	}
+
+	public JSONObject flattenAsJson(JSONObject input) {
+		return Flattener.flattenAsJson(input);
+	}
+
+	public JSONArray flattenAsJson(JSONArray input) {
+		return Flattener.flattenAsJson(input);
+	}
+
+	public JSONArray flattenAsDelimited(JSONObject input, String delimiter, String enclosedBy) {
+		return Flattener.flattenAsDelimited(input, delimiter, enclosedBy);
+	}
+
+	public JSONArray flattenAsDelimited(JSONArray input, String delimiter, String enclosedBy) {
+		return Flattener.flattenAsDelimited(input, delimiter, enclosedBy);
 	}
 }
