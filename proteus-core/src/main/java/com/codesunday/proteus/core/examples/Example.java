@@ -5,136 +5,163 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import org.codehaus.jackson.JsonProcessingException;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.node.ArrayNode;
+import org.codehaus.jackson.node.ObjectNode;
 
 import com.codesunday.proteus.core.client.ProteusClient;
 
 public class Example {
 
-	public static void main(String[] args) throws JSONException {
+	private static ObjectMapper mapper = new ObjectMapper();
+
+	public static void main(String[] args) {
 
 		ProteusClient client = ProteusClient.getInstance();
 
-		JSONObject outputObject = singleDocumentFlatteningExample(client);
+		ObjectNode outputObject = singleDocumentFlatteningExample(client);
 
 		// System.out.println(
 		// "*********Flattening As JSON Example - Single Document Demo - using
-		// JSONObject (Basic)*********");
-		// System.out.println(outputObject.toString(3));
+		// ObjectNode (Basic)*********");
+		// System.out.println(outputObject.toString());
 
-		JSONArray outputArray = multiDocumentExample(client);
+		ArrayNode outputArray = multiDocumentExample(client);
 
 		// System.out.println(
 		// "*********Flattening As JSON Example - Multi Document Demo - using
-		// JSONArray (Basic)*********");
-		// System.out.println(outputArray.toString(3));
+		// ArrayNode (Basic)*********");
+		// System.out.println(outputArray.toString());
 		//
 		outputArray = singleDocumentFlatteningDelimitedExample(client, null, null);
 
 		System.out.println(
-				"*********Flattening As Delimited Example (Defaut delimiter) - Single Document Demo - using JSONObject (Basic)*********");
-		System.out.println(outputArray.toString(3));
+				"*********Flattening As Delimited Example (Defaut delimiter) - Single Document Demo - using ObjectNode (Basic)*********");
+		System.out.println(outputArray.toString());
 
 		outputArray = singleDocumentFlatteningDelimitedExample(client, "|", "\"");
 
 		System.out.println(
-				"*********Flattening As Delimited Example (Custom delimiter) - Single Document Demo - using JSONObject (Basic)*********");
-		System.out.println(outputArray.toString(3));
+				"*********Flattening As Delimited Example (Custom delimiter) - Single Document Demo - using ObjectNode (Basic)*********");
+		System.out.println(outputArray.toString());
 
 		outputArray = multiDocumentFlatteningDelimitedExample(client, null, null);
 
 		System.out.println(
-				"*********Flattening As Delimited Example (Defaut delimiter) - Multi Document Demo - using JSONObject (Basic)*********");
-		System.out.println(outputArray.toString(3));
+				"*********Flattening As Delimited Example (Defaut delimiter) - Multi Document Demo - using ObjectNode (Basic)*********");
+		System.out.println(outputArray.toString());
 
 		outputArray = multiDocumentFlatteningDelimitedExample(client, "|", "\"");
 
 		System.out.println(
-				"*********Flattening As Delimited Example (Custom delimiter) - Multi Document Demo - using JSONObject (Basic)*********");
-		System.out.println(outputArray.toString(3));
+				"*********Flattening As Delimited Example (Custom delimiter) - Multi Document Demo - using ObjectNode (Basic)*********");
+		System.out.println(outputArray.toString());
 
 		outputObject = singleDocumentExample(client, "example-data/templates/example-template-basic.json");
 
-		System.out.println("*********Single Document Demo - using JSONObject (Basic)*********");
-		System.out.println(outputObject.toString(3));
+		System.out.println("*********Single Document Demo - using ObjectNode (Basic)*********");
+		System.out.println(outputObject.toString());
 
 		outputArray = multiDocumentExample(client, "example-data/templates/example-template-basic.json");
 
-		System.out.println("*********Multi Document Demo - using JSONArray (Basic)*********");
-		System.out.println(outputArray.toString(3));
+		System.out.println("*********Multi Document Demo - using ArrayNode (Basic)*********");
+		System.out.println(outputArray.toString());
 
 		outputObject = singleDocumentExample(client, "example-data/templates/example-template-advanced.json");
 
-		System.out.println("*********Single Document Demo - using JSONObject (Advanced)*********");
-		System.out.println(outputObject.toString(3));
+		System.out.println("*********Single Document Demo - using ObjectNode (Advanced)*********");
+		System.out.println(outputObject.toString());
 
 		outputArray = multiDocumentExample(client, "example-data/templates/example-template-advanced.json");
 
-		System.out.println("*********Multi Document Demo - using JSONArray (Advanced)*********");
-		System.out.println(outputArray.toString(3));
+		System.out.println("*********Multi Document Demo - using ArrayNode (Advanced)*********");
+		System.out.println(outputArray.toString());
 
-		List<JSONArray> multipletemplateOutput = multiTemplateExample(client,
+		List<ArrayNode> multipletemplateOutput = multiTemplateExample(client,
 				"example-data/templates/example-template-basic.json",
 				"example-data/templates/example-template-advanced.json");
 
-		System.out.println("*********Multi Template Demo - using JSONArray (Advanced)*********");
-		for (JSONArray json : multipletemplateOutput) {
-			System.out.println(json.toString(3));
+		System.out.println("*********Multi Template Demo - using ArrayNode (Advanced)*********");
+		for (ArrayNode json : multipletemplateOutput) {
+			System.out.println(json.toString());
 		}
 
 	}
 
 	/**
-	 * Using single JSONObject as input
+	 * Using single ObjectNode as input
 	 * 
 	 * @param client
-	 * @return
-	 * @throws JSONException
+	 * @return @
 	 */
-	private static JSONObject singleDocumentExample(ProteusClient client, String templatePath) throws JSONException {
+	private static ObjectNode singleDocumentExample(ProteusClient client, String templatePath) {
 
-		JSONObject inputJson = new JSONObject(getJsonTextFromFile("example-data/input/example-jsonobject.json"));
+		ObjectNode inputJson = null;
+		try {
+			inputJson = (ObjectNode) mapper.readTree(getJsonTextFromFile("example-data/input/example-jsonobject.json"));
+		} catch (JsonProcessingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 
 		String templateJsonText = getJsonTextFromFile(templatePath);
 
-		JSONObject output = client.transform(inputJson, templateJsonText);
+		ObjectNode output = client.transform(inputJson, templateJsonText);
 
 		return output;
 
 	}
 
 	/**
-	 * Using JSONArray as input for multiple documents input
+	 * Using ArrayNode as input for multiple documents input
 	 * 
 	 * @param client
-	 * @return
-	 * @throws JSONException
+	 * @return @
 	 */
-	private static JSONArray multiDocumentExample(ProteusClient client, String templatePath) throws JSONException {
+	private static ArrayNode multiDocumentExample(ProteusClient client, String templatePath) {
 
-		JSONArray inputJson = new JSONArray(getJsonTextFromFile("example-data/input/example-jsonarray.json"));
+		ArrayNode inputJson = null;
+		try {
+			inputJson = inputJson = (ArrayNode) mapper
+					.readTree(getJsonTextFromFile("example-data/input/example-jsonarray.json"));
+		} catch (JsonProcessingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 
 		String templateJsonText = getJsonTextFromFile(templatePath);
 
-		JSONArray output = client.transform(inputJson, templateJsonText);
+		ArrayNode output = client.transform(inputJson, templateJsonText);
 
 		return output;
 
 	}
 
 	/**
-	 * Using JSONArray as input for multiple documents input
+	 * Using ArrayNode as input for multiple documents input
 	 * 
 	 * @param client
-	 * @return
-	 * @throws JSONException
+	 * @return @
 	 */
-	private static List<JSONArray> multiTemplateExample(ProteusClient client, String... templatePath)
-			throws JSONException {
+	private static List<ArrayNode> multiTemplateExample(ProteusClient client, String... templatePath) {
 
-		JSONArray inputJson = new JSONArray(getJsonTextFromFile("example-data/input/example-jsonarray.json"));
+		ArrayNode inputJson = null;
+		try {
+			inputJson = (ArrayNode) mapper.readTree(getJsonTextFromFile("example-data/input/example-jsonarray.json"));
+		} catch (JsonProcessingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 
 		String[] templateJsonText = new String[templatePath.length];
 
@@ -142,71 +169,103 @@ public class Example {
 			templateJsonText[i] = getJsonTextFromFile(templatePath[i]);
 		}
 
-		List<JSONArray> output = client.transform(inputJson, templateJsonText);
+		List<ArrayNode> output = client.transform(inputJson, templateJsonText);
 
 		return output;
 
 	}
 
 	/**
-	 * Flattening Using single JSONObject as input
+	 * Flattening Using single ObjectNode as input
 	 * 
 	 * @param client
-	 * @return
-	 * @throws JSONException
+	 * @return @
 	 */
-	private static JSONObject singleDocumentFlatteningExample(ProteusClient client) throws JSONException {
+	private static ObjectNode singleDocumentFlatteningExample(ProteusClient client) {
 
-		JSONObject inputJson = new JSONObject(getJsonTextFromFile("example-data/input/example-jsonobject.json"));
+		ObjectNode inputJson = null;
+		try {
+			inputJson = (ObjectNode) mapper.readTree(getJsonTextFromFile("example-data/input/example-jsonobject.json"));
+		} catch (JsonProcessingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 
 		return client.flattenAsJson(inputJson);
 	}
 
 	/**
-	 * Flattening Using JSONArray as input for multiple documents input
+	 * Flattening Using ArrayNode as input for multiple documents input
 	 * 
 	 * @param client
-	 * @return
-	 * @throws JSONException
+	 * @return @
 	 */
-	private static JSONArray multiDocumentExample(ProteusClient client) throws JSONException {
+	private static ArrayNode multiDocumentExample(ProteusClient client) {
 
-		JSONArray inputJson = new JSONArray(getJsonTextFromFile("example-data/input/example-jsonarray.json"));
+		ArrayNode inputJson = null;
+		try {
+			inputJson = (ArrayNode) mapper.readTree(getJsonTextFromFile("example-data/input/example-jsonarray.json"));
+		} catch (JsonProcessingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 
-		JSONArray output = client.flattenAsJson(inputJson);
+		ArrayNode output = client.flattenAsJson(inputJson);
 
 		return output;
 
 	}
 
 	/**
-	 * Flattening Using single JSONObject as input
+	 * Flattening Using single ObjectNode as input
 	 * 
 	 * @param client
-	 * @return
-	 * @throws JSONException
+	 * @return @
 	 */
-	private static JSONArray singleDocumentFlatteningDelimitedExample(ProteusClient client, String delimiter,
-			String enclosedBy) throws JSONException {
+	private static ArrayNode singleDocumentFlatteningDelimitedExample(ProteusClient client, String delimiter,
+			String enclosedBy) {
 
-		JSONObject inputJson = new JSONObject(getJsonTextFromFile("example-data/input/example-jsonobject.json"));
+		ObjectNode inputJson = null;
+		try {
+			inputJson = (ObjectNode) mapper.readTree(getJsonTextFromFile("example-data/input/example-jsonobject.json"));
+		} catch (JsonProcessingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 
 		return client.flattenAsDelimited(inputJson, delimiter, enclosedBy);
 	}
 
 	/**
-	 * Flattening Using JSONArray as input for multiple documents input
+	 * Flattening Using ArrayNode as input for multiple documents input
 	 * 
 	 * @param client
-	 * @return
-	 * @throws JSONException
+	 * @return @
 	 */
-	private static JSONArray multiDocumentFlatteningDelimitedExample(ProteusClient client, String delimiter,
-			String enclosedBy) throws JSONException {
+	private static ArrayNode multiDocumentFlatteningDelimitedExample(ProteusClient client, String delimiter,
+			String enclosedBy) {
 
-		JSONArray inputJson = new JSONArray(getJsonTextFromFile("example-data/input/example-jsonarray.json"));
+		ArrayNode inputJson = null;
+		try {
+			inputJson = (ArrayNode) mapper.readTree(getJsonTextFromFile("example-data/input/example-jsonarray.json"));
+		} catch (JsonProcessingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 
-		JSONArray output = client.flattenAsDelimited(inputJson, delimiter, enclosedBy);
+		ArrayNode output = client.flattenAsDelimited(inputJson, delimiter, enclosedBy);
 
 		return output;
 

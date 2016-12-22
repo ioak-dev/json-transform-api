@@ -20,10 +20,10 @@ package com.codesunday.proteus.core.client;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
-
-import com.codesunday.proteus.core.processor.Flattener;
+import org.codehaus.jackson.JsonNode;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.node.ArrayNode;
+import org.codehaus.jackson.node.ObjectNode;
 
 /**
  * Client instance that will act as interface for this library.
@@ -32,6 +32,8 @@ import com.codesunday.proteus.core.processor.Flattener;
  *
  */
 public class ProteusClient {
+
+	private static ObjectMapper mapper = new ObjectMapper();
 
 	private ProteusClientImpl clientImpl;
 
@@ -58,7 +60,7 @@ public class ProteusClient {
 	 * @param templateText
 	 * @return
 	 */
-	public JSONObject transform(JSONObject input, String templateText) {
+	public ObjectNode transform(ObjectNode input, String templateText) {
 		return clientImpl.transformImpl(input, templateText);
 	}
 
@@ -69,7 +71,7 @@ public class ProteusClient {
 	 * @param template
 	 * @return
 	 */
-	public JSONObject transform(JSONObject input, JSONObject template) {
+	public ObjectNode transform(ObjectNode input, ObjectNode template) {
 		return transform(input, template.toString());
 	}
 
@@ -81,11 +83,11 @@ public class ProteusClient {
 	 * @param templateText
 	 * @return
 	 */
-	public List<JSONObject> transform(List<JSONObject> input, String templateText) {
+	public List<ObjectNode> transform(List<ObjectNode> input, String templateText) {
 
-		List<JSONObject> output = new ArrayList();
+		List<ObjectNode> output = new ArrayList();
 
-		for (JSONObject item : input) {
+		for (ObjectNode item : input) {
 			output.add(transform(item, templateText));
 		}
 
@@ -100,7 +102,7 @@ public class ProteusClient {
 	 * @param template
 	 * @return
 	 */
-	public List<JSONObject> transform(List<JSONObject> input, JSONObject template) {
+	public List<ObjectNode> transform(List<ObjectNode> input, ObjectNode template) {
 		return transform(input, template.toString());
 	}
 
@@ -111,13 +113,12 @@ public class ProteusClient {
 	 * @param templateText
 	 * @return
 	 */
-	public JSONArray transform(JSONArray input, String templateText) {
+	public ArrayNode transform(ArrayNode input, String templateText) {
 
-		JSONArray output = new JSONArray();
+		ArrayNode output = mapper.createArrayNode();
 
-		for (int i = 0; i < input.length(); i++) {
-			JSONObject item = input.optJSONObject(i);
-			output.put(transform(item, templateText));
+		for (JsonNode node : input) {
+			output.add(transform((ObjectNode) node, templateText));
 		}
 
 		return output;
@@ -130,7 +131,7 @@ public class ProteusClient {
 	 * @param template
 	 * @return
 	 */
-	public JSONArray transform(JSONArray input, JSONObject template) {
+	public ArrayNode transform(ArrayNode input, ObjectNode template) {
 		return transform(input, template.toString());
 	}
 
@@ -147,16 +148,16 @@ public class ProteusClient {
 	 * @param templateText
 	 * @return
 	 */
-	public List<List<JSONObject>> transform(List<JSONObject> input, String... templateText) {
+	public List<List<ObjectNode>> transform(List<ObjectNode> input, String... templateText) {
 
-		List<List<JSONObject>> output = new ArrayList();
+		List<List<ObjectNode>> output = new ArrayList();
 
 		for (int i = 0; i < templateText.length; i++) {
-			List<JSONObject> list = new ArrayList();
+			List<ObjectNode> list = new ArrayList();
 			output.add(list);
 		}
 
-		for (JSONObject item : input) {
+		for (ObjectNode item : input) {
 			for (int i = 0; i < templateText.length; i++) {
 				output.get(i).add(transform(item, templateText[i]));
 			}
@@ -178,7 +179,7 @@ public class ProteusClient {
 	 * @param template
 	 * @return
 	 */
-	public List<List<JSONObject>> transform(List<JSONObject> input, JSONObject... template) {
+	public List<List<ObjectNode>> transform(List<ObjectNode> input, ObjectNode... template) {
 
 		String[] templateText = new String[template.length];
 
@@ -201,19 +202,18 @@ public class ProteusClient {
 	 * @param templateText
 	 * @return
 	 */
-	public List<JSONArray> transform(JSONArray input, String... templateText) {
+	public List<ArrayNode> transform(ArrayNode input, String... templateText) {
 
-		List<JSONArray> output = new ArrayList();
+		List<ArrayNode> output = new ArrayList();
 
 		for (int i = 0; i < templateText.length; i++) {
-			JSONArray jsonarray = new JSONArray();
+			ArrayNode jsonarray = mapper.createArrayNode();
 			output.add(jsonarray);
 		}
 
-		for (int i = 0; i < input.length(); i++) {
-			JSONObject item = input.optJSONObject(i);
+		for (JsonNode node : input) {
 			for (int j = 0; j < templateText.length; j++) {
-				output.get(j).put(transform(item, templateText[j]));
+				output.get(j).add(transform((ObjectNode) node, templateText[j]));
 			}
 		}
 
@@ -232,7 +232,7 @@ public class ProteusClient {
 	 * @param template
 	 * @return
 	 */
-	public List<JSONArray> transform(JSONArray input, JSONObject... template) {
+	public List<ArrayNode> transform(ArrayNode input, ObjectNode... template) {
 
 		String[] templateText = new String[template.length];
 
@@ -242,20 +242,20 @@ public class ProteusClient {
 
 		return transform(input, templateText);
 	}
-	
-	public JSONObject flattenAsJson(JSONObject input){
-		return clientImpl.flattenAsJson(input);
-	}
-	
-	public JSONArray flattenAsJson(JSONArray input){
+
+	public ObjectNode flattenAsJson(ObjectNode input) {
 		return clientImpl.flattenAsJson(input);
 	}
 
-	public JSONArray flattenAsDelimited(JSONObject input, String delimiter, String enclosedBy) {
+	public ArrayNode flattenAsJson(ArrayNode input) {
+		return clientImpl.flattenAsJson(input);
+	}
+
+	public ArrayNode flattenAsDelimited(ObjectNode input, String delimiter, String enclosedBy) {
 		return clientImpl.flattenAsDelimited(input, delimiter, enclosedBy);
 	}
 
-	public JSONArray flattenAsDelimited(JSONArray input, String delimiter, String enclosedBy) {
+	public ArrayNode flattenAsDelimited(ArrayNode input, String delimiter, String enclosedBy) {
 		return clientImpl.flattenAsDelimited(input, delimiter, enclosedBy);
 	}
 

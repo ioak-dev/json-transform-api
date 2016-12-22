@@ -23,8 +23,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.json.JSONException;
-import org.json.JSONObject;
+import org.codehaus.jackson.JsonNode;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.node.ArrayNode;
+import org.codehaus.jackson.node.ObjectNode;
 
 import com.codesunday.proteus.core.constants.Constants;
 import com.codesunday.proteus.core.exception.ProteusException;
@@ -38,24 +40,26 @@ import com.codesunday.proteus.core.utils.JSONUtils;
  */
 public class Transformer {
 
-	public static JSONObject transformImpl(JSONObject input, JSONObject template) throws JSONException {
-		Iterator keys = template.keys();
+	private static ObjectMapper mapper = new ObjectMapper();
+
+	public static ObjectNode transformImpl(ObjectNode input, ObjectNode template) {
+		Iterator keys = template.getFieldNames();
 
 		while (keys.hasNext()) {
 			String key = (String) keys.next();
-			Object value = template.opt(key);
+			JsonNode value = template.get(key);
 
-			if (value instanceof JSONObject) {
-				transformImpl(input, (JSONObject) value);
+			if (value.isObject()) {
+				transformImpl(input, (ObjectNode) value);
 			}
 
-			else if (value instanceof String) {
+			else if (value.isTextual()) {
 
-				List<Object> list;
-				String findKey = (String) value;
+				List<JsonNode> list;
+				String findKey = value.getTextValue();
 
 				if (findKey.startsWith(Constants._AS_SET)) {
-					Map<String, List<Object>> intermediateMap = new HashMap();
+					Map<String, List<JsonNode>> intermediateMap = new HashMap();
 					int referenceLength = 0;
 					for (String subkey : findKey.substring(7, findKey.length() - 1).split(",")) {
 
@@ -69,7 +73,7 @@ public class Transformer {
 							alias = parts[0].substring(parts[0].lastIndexOf(Constants.DOT) + 1);
 						}
 
-						List<Object> intermediateList = JSONUtils.getValue(input, parts[0]);
+						List<JsonNode> intermediateList = JSONUtils.getValue(input, parts[0]);
 
 						referenceLength = intermediateList.size();
 
@@ -85,7 +89,8 @@ public class Transformer {
 				} else if (list != null && list.size() == 1) {
 					template.put(key, list.get(0));
 				} else {
-					template.put(key, list);
+					ArrayNode array = mapper.valueToTree(list);
+					template.put(key, array);
 				}
 			}
 
@@ -103,7 +108,7 @@ public class Transformer {
 	 * @param referenceLength
 	 * @return
 	 */
-	private static List<Object> concatenate(Map<String, List<Object>> intermediateMap, int referenceLength) {
+	private static List<JsonNode> concatenate(Map<String, List<JsonNode>> intermediateMap, int referenceLength) {
 
 		boolean mergable = true;
 
@@ -114,18 +119,15 @@ public class Transformer {
 			}
 		}
 
-		List<Object> returnList = new ArrayList();
+		List<JsonNode> returnList = new ArrayList();
 
 		if (mergable) {
 
 			for (int i = 0; i < referenceLength; i++) {
-				JSONObject json = new JSONObject();
+				ObjectNode json = mapper.createObjectNode();
 				for (String key : intermediateMap.keySet()) {
-					try {
-						json.put(key, intermediateMap.get(key).get(i));
-					} catch (JSONException e) {
-						e.printStackTrace();
-					}
+					json.put(key, intermediateMap.get(key).get(i));
+
 				}
 
 				returnList.add(json);

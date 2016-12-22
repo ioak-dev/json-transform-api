@@ -17,9 +17,12 @@
 
 package com.codesunday.proteus.core.client;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import java.io.IOException;
+
+import org.codehaus.jackson.JsonProcessingException;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.node.ArrayNode;
+import org.codehaus.jackson.node.ObjectNode;
 
 import com.codesunday.proteus.core.processor.Flattener;
 import com.codesunday.proteus.core.processor.Transformer;
@@ -32,38 +35,42 @@ import com.codesunday.proteus.core.processor.Transformer;
  */
 class ProteusClientImpl {
 
+	private static ObjectMapper mapper = new ObjectMapper();
+
 	ProteusClientImpl() {
 		super();
 	}
 
-	JSONObject transformImpl(JSONObject input, String templateText) {
+	ObjectNode transformImpl(ObjectNode input, String templateText) {
 
-		JSONObject template = null;
+		ObjectNode template = null;
 
 		try {
-
-			template = Transformer.transformImpl(input, new JSONObject(templateText));
-
-		} catch (JSONException e) {
+			template = Transformer.transformImpl(input, (ObjectNode) mapper.readTree(templateText));
+		} catch (JsonProcessingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
 		return template;
 	}
 
-	public JSONObject flattenAsJson(JSONObject input) {
+	public ObjectNode flattenAsJson(ObjectNode input) {
 		return Flattener.flattenAsJson(input);
 	}
 
-	public JSONArray flattenAsJson(JSONArray input) {
+	public ArrayNode flattenAsJson(ArrayNode input) {
 		return Flattener.flattenAsJson(input);
 	}
 
-	public JSONArray flattenAsDelimited(JSONObject input, String delimiter, String enclosedBy) {
+	public ArrayNode flattenAsDelimited(ObjectNode input, String delimiter, String enclosedBy) {
 		return Flattener.flattenAsDelimited(input, delimiter, enclosedBy);
 	}
 
-	public JSONArray flattenAsDelimited(JSONArray input, String delimiter, String enclosedBy) {
+	public ArrayNode flattenAsDelimited(ArrayNode input, String delimiter, String enclosedBy) {
 		return Flattener.flattenAsDelimited(input, delimiter, enclosedBy);
 	}
 }

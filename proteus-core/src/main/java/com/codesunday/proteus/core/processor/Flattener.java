@@ -1,23 +1,32 @@
 package com.codesunday.proteus.core.processor;
 
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
+import org.codehaus.jackson.JsonNode;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.node.ArrayNode;
+import org.codehaus.jackson.node.ObjectNode;
 
 public class Flattener {
 
-	public static JSONObject flattenAsJson(JSONObject input) {
+	private static ObjectMapper mapper = new ObjectMapper();
 
-		JSONObject output = new JSONObject();
+	public static ObjectNode flattenAsJson(ObjectNode input) {
 
-		for (String key : input.keySet()) {
-			Object value = input.opt(key);
+		ObjectNode output = mapper.createObjectNode();
 
-			JSONObject elements = analyse(key, value);
+		Iterator<String> fields = input.getFieldNames();
 
-			concatenateJsonObject(output, elements);
+		while (fields.hasNext()) {
+			String key = fields.next();
+
+			JsonNode value = input.get(key);
+
+			ObjectNode elements = analyse(key, value);
+
+			concatenateObjectNode(output, elements);
 
 		}
 
@@ -25,33 +34,38 @@ public class Flattener {
 
 	}
 
-	public static JSONArray flattenAsJson(JSONArray inputArray) {
+	public static ArrayNode flattenAsJson(ArrayNode inputArray) {
 
-		JSONArray outputArray = new JSONArray();
+		ArrayNode outputArray = mapper.createArrayNode();
 
-		for (int i = 0; i < inputArray.length(); i++) {
-			JSONObject input = inputArray.optJSONObject(i);
-			JSONObject output = flattenAsJson(input);
+		for (JsonNode node : inputArray) {
+			if (inputArray.isObject()) {
+				ObjectNode output = flattenAsJson((ObjectNode) node);
+				outputArray.add(output);
+			}
 
-			outputArray.put(output);
 		}
 
 		return outputArray;
 
 	}
 
-	public static JSONArray flattenAsDelimited(JSONObject input, String delimiter, String enclosedBy) {
+	public static ArrayNode flattenAsDelimited(ObjectNode input, String delimiter, String enclosedBy) {
 
-		JSONArray output = new JSONArray();
+		ArrayNode output = mapper.createArrayNode();
 		Set<String> keys = new HashSet<String>();
 
 		if (delimiter == null) {
 			delimiter = ",";
 		}
 
-		JSONObject flattenedJson = flattenAsJson(input);
+		ObjectNode flattenedJson = flattenAsJson(input);
 
-		keys.addAll(flattenedJson.keySet());
+		Iterator<String> fields = flattenedJson.getFieldNames();
+
+		while (fields.hasNext()) {
+			keys.add(fields.next());
+		}
 
 		if (enclosedBy == null) {
 			StringBuilder headerSb = new StringBuilder();
@@ -60,27 +74,27 @@ public class Flattener {
 				headerSb.append(key);
 				headerSb.append(delimiter);
 			}
-			
+
 			int end = 0;
-			
-			if(headerSb.length()>1){
+
+			if (headerSb.length() > 1) {
 				end = headerSb.length() - 1;
 			}
 
-			output.put(headerSb.substring(0, end).toString());
+			output.add(headerSb.substring(0, end).toString());
 
 			StringBuilder bodySb = new StringBuilder();
 
 			for (String key : keys) {
-				bodySb.append(flattenedJson.opt(key));
+				bodySb.append(flattenedJson.get(key));
 				bodySb.append(delimiter);
 			}
-			
-			if(bodySb.length()>1){
+
+			if (bodySb.length() > 1) {
 				end = bodySb.length() - 1;
 			}
 
-			output.put(bodySb.substring(0, end).toString());
+			output.add(bodySb.substring(0, end).toString());
 		} else {
 			StringBuilder headerSb = new StringBuilder();
 
@@ -91,42 +105,46 @@ public class Flattener {
 				headerSb.append(delimiter);
 			}
 
-			output.put(headerSb.substring(0, headerSb.length() - 1).toString());
+			output.add(headerSb.substring(0, headerSb.length() - 1).toString());
 
 			StringBuilder bodySb = new StringBuilder();
 
 			for (String key : keys) {
 				bodySb.append(enclosedBy);
-				bodySb.append(flattenedJson.opt(key));
+				bodySb.append(flattenedJson.get(key));
 				bodySb.append(enclosedBy);
 				bodySb.append(delimiter);
 			}
 
-			output.put(bodySb.substring(0, bodySb.length() - 1).toString());
+			output.add(bodySb.substring(0, bodySb.length() - 1).toString());
 		}
 
 		return output;
 
 	}
 
-	public static JSONArray flattenAsDelimited(JSONArray inputArray, String delimiter, String enclosedBy) {
+	public static ArrayNode flattenAsDelimited(ArrayNode inputArray, String delimiter, String enclosedBy) {
 
-		JSONArray output = new JSONArray();
+		ArrayNode output = mapper.createArrayNode();
 		Set<String> keys = new HashSet<String>();
 
 		if (delimiter == null) {
 			delimiter = ",";
 		}
 
-		JSONArray flattenedJsonArray = new JSONArray();
+		ArrayNode flattenedArrayNode = mapper.createArrayNode();
 
-		for (int i = 0; i < inputArray.length(); i++) {
+		for (JsonNode node : inputArray) {
 
-			JSONObject flattenedJson = flattenAsJson(inputArray.optJSONObject(i));
+			ObjectNode flattenedJson = flattenAsJson((ObjectNode) node);
 
-			flattenedJsonArray.put(flattenedJson);
+			flattenedArrayNode.add(flattenedJson);
 
-			keys.addAll(flattenedJson.keySet());
+			Iterator<String> fields = flattenedJson.getFieldNames();
+
+			while (fields.hasNext()) {
+				keys.add(fields.next());
+			}
 
 		}
 
@@ -137,22 +155,22 @@ public class Flattener {
 				headerSb.append(key);
 				headerSb.append(delimiter);
 			}
-			
+
 			int end = 0;
-			
-			if(headerSb.length()>1){
+
+			if (headerSb.length() > 1) {
 				end = headerSb.length() - 1;
 			}
 
-			output.put(headerSb.substring(0, end).toString());
+			output.add(headerSb.substring(0, end).toString());
 
-			for (int i = 0; i < flattenedJsonArray.length(); i++) {
+			for (JsonNode node : flattenedArrayNode) {
 
 				StringBuilder bodySb = new StringBuilder();
 
 				for (String key : keys) {
-					if (flattenedJsonArray.optJSONObject(i).has(key)) {
-						bodySb.append(flattenedJsonArray.optJSONObject(i).opt(key));
+					if (node.has(key)) {
+						bodySb.append(node.get(key));
 					} else {
 						bodySb.append("");
 					}
@@ -160,12 +178,12 @@ public class Flattener {
 				}
 
 				end = 0;
-				
-				if(bodySb.length()>1){
+
+				if (bodySb.length() > 1) {
 					end = bodySb.length() - 1;
 				}
-				
-				output.put(bodySb.substring(0, end).toString());
+
+				output.add(bodySb.substring(0, end).toString());
 			}
 
 		} else {
@@ -179,35 +197,35 @@ public class Flattener {
 			}
 
 			int end = 0;
-			
-			if(headerSb.length()>1){
+
+			if (headerSb.length() > 1) {
 				end = headerSb.length() - 1;
 			}
-			
-			output.put(headerSb.substring(0, end).toString());
 
-			for (int i = 0; i < flattenedJsonArray.length(); i++) {
+			output.add(headerSb.substring(0, end).toString());
+
+			for (JsonNode node : flattenedArrayNode) {
 
 				StringBuilder bodySb = new StringBuilder();
 
 				for (String key : keys) {
 					bodySb.append(enclosedBy);
-					if (flattenedJsonArray.optJSONObject(i).has(key)) {
-						bodySb.append(flattenedJsonArray.optJSONObject(i).opt(key));
+					if (node.has(key)) {
+						bodySb.append(node.get(key));
 					} else {
 						bodySb.append("");
 					}
 					bodySb.append(enclosedBy);
 					bodySb.append(delimiter);
 				}
-				
+
 				end = 0;
-				
-				if(bodySb.length()>1){
+
+				if (bodySb.length() > 1) {
 					end = bodySb.length() - 1;
 				}
-				
-				output.put(bodySb.substring(0, end).toString());
+
+				output.add(bodySb.substring(0, end).toString());
 			}
 
 		}
@@ -216,39 +234,42 @@ public class Flattener {
 
 	}
 
-	private static void concatenateJsonObject(JSONObject destination, JSONObject source) {
-		for (String elementKey : source.keySet()) {
-			destination.put(elementKey, source.opt(elementKey));
+	private static void concatenateObjectNode(ObjectNode destination, ObjectNode source) {
+
+		Iterator<String> iterator = source.getFieldNames();
+
+		while (iterator.hasNext()) {
+			String key = iterator.next();
+			destination.put(key, source.get(key));
 		}
 	}
 
-	private static JSONObject analyse(String baseKey, Object inputObj) {
+	private static ObjectNode analyse(String baseKey, JsonNode inputObj) {
 
-		JSONObject output = new JSONObject();
+		ObjectNode output = mapper.createObjectNode();
 
-		if (inputObj instanceof JSONObject) {
+		if (inputObj instanceof ObjectNode) {
 
-			JSONObject jsonObject = (JSONObject) inputObj;
+			ObjectNode objectNode = (ObjectNode) inputObj;
 
-			for (String key : jsonObject.keySet()) {
-				Object value = jsonObject.opt(key);
+			Iterator<String> iterator = objectNode.getFieldNames();
 
-				concatenateJsonObject(output, analyse(baseKey + "." + key, value));
+			while (iterator.hasNext()) {
+				String key = iterator.next();
+				JsonNode value = objectNode.get(key);
+
+				concatenateObjectNode(output, analyse(baseKey + "." + key, value));
 			}
 
-		} else if (inputObj instanceof JSONArray) {
+		} else if (inputObj instanceof ArrayNode)
 
-			JSONArray inputArray = (JSONArray) inputObj;
+		{
 
-			for (int i = 0; i < inputArray.length(); i++) {
-				Object elementObj = inputArray.opt(i);
-				concatenateJsonObject(output, analyse(baseKey + "[" + i + "]", elementObj));
-				// if(elementObj instanceof JSONArray || elementObj instanceof
-				// JSONObject){
-				// analyse(baseKey + "." + i, inputObj);
-				// } else if (elementObj instanceof String){
-				//
-				// }
+			int i = 0;
+
+			for (JsonNode node : inputObj) {
+				concatenateObjectNode(output, analyse(baseKey + "[" + i + "]", node));
+				i = i + 1;
 			}
 
 		} else {

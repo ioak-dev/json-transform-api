@@ -19,11 +19,13 @@ package com.codesunday.proteus.core.utils;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import org.codehaus.jackson.JsonNode;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.node.ArrayNode;
+import org.codehaus.jackson.node.ObjectNode;
 
 /**
  * Utility methods to work on Json objects and arrays.
@@ -33,6 +35,8 @@ import org.json.JSONObject;
  */
 public class JSONUtils implements Cloneable, Serializable {
 
+	private static ObjectMapper mapper = new ObjectMapper();
+
 	/**
 	 * Get list of values for a specified search key field.
 	 * 
@@ -40,20 +44,46 @@ public class JSONUtils implements Cloneable, Serializable {
 	 * @param searchKey
 	 * @return
 	 */
-	public static List<Object> getValue(JSONObject input, String searchKey) {
+	public static List<JsonNode> getValue(ObjectNode input, String searchKey) {
 
-		List<Object> returnList = new ArrayList<Object>();
+		List<JsonNode> returnList = new ArrayList<JsonNode>();
 
-		Object currentJsonElement = input;
+		JsonNode currentJsonElement = input;
 
 		for (String key : searchKey.split("\\.")) {
 			currentJsonElement = pullDataFromJson(currentJsonElement, key);
 		}
 
-		List<Object> intermediateList = jsonToObjectArray(currentJsonElement);
+		List<JsonNode> intermediateList = jsonToObjectArray(currentJsonElement);
 
-		for (Object obj : intermediateList) {
+		for (JsonNode obj : intermediateList) {
 			returnList.add(obj);
+		}
+
+		return returnList;
+	}
+
+	/**
+	 * Get list of values for a specified search key field.
+	 * 
+	 * @param input
+	 * @param searchKey
+	 * @return
+	 */
+	public static List<String> getValueAsTextual(ObjectNode input, String searchKey) {
+
+		List<String> returnList = new ArrayList<String>();
+
+		JsonNode currentJsonElement = input;
+
+		for (String key : searchKey.split("\\.")) {
+			currentJsonElement = pullDataFromJson(currentJsonElement, key);
+		}
+
+		List<JsonNode> intermediateList = jsonToObjectArray(currentJsonElement);
+
+		for (JsonNode obj : intermediateList) {
+			returnList.add(obj.getTextValue());
 		}
 
 		return returnList;
@@ -66,47 +96,36 @@ public class JSONUtils implements Cloneable, Serializable {
 	 * @param key
 	 * @return
 	 */
-	private static Object pullDataFromJson(Object inputObject, String key) {
+	private static JsonNode pullDataFromJson(JsonNode inputObject, String key) {
 
-		Object returnObject = null;
+		JsonNode returnObject = null;
 
-		try {
-
-			if (inputObject instanceof JSONObject) {
-				JSONObject jsonObject = (JSONObject) inputObject;
-				if (jsonObject.has(key)) {
-					returnObject = jsonObject.get(key);
-				}
-
-			} else if (inputObject instanceof JSONArray) {
-
-				JSONArray jsonArray = (JSONArray) inputObject;
-
-				JSONArray returnArray = new JSONArray();
-
-				for (int j = 0; j < jsonArray.length(); j++) {
-
-					Object obj = jsonArray.get(j);
-
-					Object obj2 = pullDataFromJson(obj, key);
-
-					if (obj2 instanceof JSONObject) {
-						returnArray.put(obj2);
-					} else if (obj2 instanceof JSONArray) {
-						JSONArray arr2 = (JSONArray) obj2;
-						for (int k = 0; k < arr2.length(); k++) {
-							returnArray.put(arr2.get(k));
-						}
-					} else {
-						returnArray.put(obj2);
-					}
-				}
-
-				returnObject = returnArray;
-
+		if (inputObject.isObject()) {
+			if (inputObject.has(key)) {
+				returnObject = inputObject.get(key);
 			}
-		} catch (JSONException e) {
-			e.printStackTrace();
+
+		} else if (inputObject.isArray()) {
+
+			ArrayNode returnArray = mapper.createArrayNode();
+
+			for (JsonNode node : inputObject) {
+
+				JsonNode node2 = pullDataFromJson(node, key);
+
+				if (node2.isObject()) {
+					returnArray.add(node2);
+				} else if (node2.isArray()) {
+					for (JsonNode arrNode : node2) {
+						returnArray.add(arrNode);
+					}
+				} else {
+					returnArray.add(node2);
+				}
+			}
+
+			returnObject = returnArray;
+
 		}
 
 		return returnObject;
@@ -115,34 +134,26 @@ public class JSONUtils implements Cloneable, Serializable {
 	/**
 	 * Convert Json object or Json array into a list of objects
 	 * 
-	 * @param object
+	 * @param input
 	 * @return
 	 */
-	private static List<Object> jsonToObjectArray(Object object) {
-		List<Object> returnList = new ArrayList<Object>();
-		if (object != null) {
-			if (object instanceof JSONArray) {
-				JSONArray array = (JSONArray) object;
-				if (array == null)
-					return null;
+	private static List<JsonNode> jsonToObjectArray(JsonNode input) {
+		List<JsonNode> returnList = new ArrayList<JsonNode>();
+		if (input != null) {
+			if (input.isArray()) {
 
-				for (int i = 0; i < array.length(); i++) {
-					List<Object> intermediate;
-					if (!array.isNull(i)) {
-						try {
-							intermediate = jsonToObjectArray(array.get(i));
-							returnList.addAll(intermediate);
-						} catch (JSONException e) {
-							e.printStackTrace();
-						}
-					}
+				for (JsonNode node : input) {
+					List<JsonNode> intermediate;
+					intermediate = jsonToObjectArray(node);
+					returnList.addAll(intermediate);
+
 				}
-			} else if (object instanceof JSONObject) {
+			} else if (input instanceof ObjectNode) {
 
-				returnList.add(object);
+				returnList.add(input);
 
 			} else {
-				returnList.add(object);
+				returnList.add(input);
 			}
 		}
 		return returnList;
@@ -154,14 +165,11 @@ public class JSONUtils implements Cloneable, Serializable {
 	 * @param copyTo
 	 * @param copyFrom
 	 */
-	public static void putAll(JSONObject copyTo, JSONObject copyFrom) {
-		try {
-			JSONObject inputObject = (JSONObject) copyFrom;
-			for (String key : JSONObject.getNames(inputObject)) {
-				put(copyTo, key, inputObject.get(key));
-			}
-		} catch (JSONException e) {
-			e.printStackTrace();
+	public static void putAll(ObjectNode copyTo, ObjectNode copyFrom) {
+		Iterator<String> keys = copyFrom.getFieldNames();
+		while (keys.hasNext()) {
+			String key = keys.next();
+			put(copyTo, key, copyFrom.get(key));
 		}
 	}
 
@@ -174,13 +182,9 @@ public class JSONUtils implements Cloneable, Serializable {
 	 * @param key
 	 * @param value
 	 */
-	public static void put(JSONObject input, String key, Object value) {
-		if (value instanceof JSONObject) {
-			try {
-				input.put(key, value);
-			} catch (JSONException e) {
-				e.printStackTrace();
-			}
+	public static void put(ObjectNode input, String key, JsonNode value) {
+		if (value instanceof ObjectNode) {
+			input.put(key, value);
 		}
 	}
 
